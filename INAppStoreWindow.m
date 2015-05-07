@@ -165,6 +165,7 @@ NS_INLINE CGGradientRef INCreateGradientWithColors(NSColor *startingColor, NSCol
 - (void)_hideTitleBarView:(BOOL)hidden;
 - (CGFloat)_defaultTrafficLightLeftMargin;
 - (CGFloat)_defaultTrafficLightSeparation;
+@property BOOL inFullScreen;
 @end
 
 @implementation INTitlebarView
@@ -833,9 +834,15 @@ NS_INLINE CGGradientRef INCreateGradientWithColors(NSColor *startingColor, NSCol
         minimizeFrame.origin.y = NSMaxY(zoomFrame) + self.trafficLightSeparation - 2.f;
         closeFrame.origin.y = NSMaxY(minimizeFrame) + self.trafficLightSeparation - 2.f;
     }
-    [close setFrame:closeFrame];
-    [minimize setFrame:minimizeFrame];
-    [zoom setFrame:zoomFrame];
+    // see https://github.com/indragiek/INAppStoreWindow/issues/180
+    // this solution is: https://github.com/mekentosj/INAppStoreWindow/commit/23e06df5e9d5dba7afdab21bb94f62c7202fff1e
+    BOOL RUNNING_ON_YOSEMITE = floor(NSAppKitVersionNumber) > 1265;
+    if ((RUNNING_ON_YOSEMITE && !self.inFullScreen) || !RUNNING_ON_YOSEMITE)
+    {
+        [close setFrame:closeFrame];
+        [minimize setFrame:minimizeFrame];
+        [zoom setFrame:zoomFrame];
+    }
 
     NSButton *docIconButton = [self standardWindowButton:NSWindowDocumentIconButton];
     if (docIconButton) {
@@ -916,6 +923,7 @@ NS_INLINE CGGradientRef INCreateGradientWithColors(NSColor *startingColor, NSCol
 
 - (void)windowWillEnterFullScreen:(NSNotification *)notification
 {
+    _inFullScreen = YES;
     if (_hideTitleBarInFullScreen) {
         // Recalculate the views when entering from fullscreen
         _titleBarHeight = 0.0f;
@@ -939,6 +947,7 @@ NS_INLINE CGGradientRef INCreateGradientWithColors(NSColor *startingColor, NSCol
 
 - (void)windowDidExitFullScreen:(NSNotification *)notification
 {
+    _inFullScreen = NO;
     [self _layoutTrafficLightsAndContent];
     [self _setupTrafficLightsTrackingArea];
 }
