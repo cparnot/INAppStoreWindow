@@ -383,6 +383,15 @@ NS_INLINE CGGradientRef INCreateGradientWithColors(NSColor *startingColor, NSCol
         [super mouseDragged: theEvent];
         return;
     }
+
+    // bug in 10.10, even worse in 10.11: window jumping around when being dragged
+    // this only happens towards the top part of the window
+    if (NSHeight(window.frame) - theEvent.locationInWindow.y < 25)
+    {
+        [super mouseDragged: theEvent];
+        return;
+    }
+
     NSPoint origin = [window frame].origin;
     while ((theEvent = [NSApp nextEventMatchingMask:NSLeftMouseDownMask | NSLeftMouseDraggedMask | NSLeftMouseUpMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES]) && ([theEvent type] != NSLeftMouseUp)) {
         @autoreleasepool {
